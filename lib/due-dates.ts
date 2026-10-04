@@ -97,6 +97,10 @@ export function clearCustomDueDate(petId: string, item: CareItem) {
   if (others.length !== list.length) writeList(CUSTOM_KEY, others);
 }
 
+export function clearCustomDueDatesForPet(petId: string) {
+  writeList(CUSTOM_KEY, readList<CustomDueDate>(CUSTOM_KEY).filter((e) => e.petId !== petId));
+}
+
 export function useCustomDueDates(): CustomDueDate[] | null {
   return useStoredList<CustomDueDate>(CUSTOM_KEY);
 }

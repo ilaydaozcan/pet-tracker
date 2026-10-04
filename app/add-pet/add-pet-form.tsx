@@ -3,17 +3,19 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { addPet, resizePhoto } from "@/lib/pets";
+import { addPet, resizePhoto, updatePet, type Pet } from "@/lib/pets";
 
 const inputClass =
   "w-full rounded-md border border-foreground/20 bg-transparent px-3 py-2";
 
-export default function AddPetForm() {
+// Without `pet` this adds a new cat. With `pet` it edits that cat:
+// the fields start filled in, and saving updates it instead.
+export default function AddPetForm({ pet }: { pet?: Pet }) {
   const router = useRouter();
-  const [photo, setPhoto] = useState("");
-  const [name, setName] = useState("");
-  const [breed, setBreed] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [photo, setPhoto] = useState(pet?.photo ?? "");
+  const [name, setName] = useState(pet?.name ?? "");
+  const [breed, setBreed] = useState(pet?.breed ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(pet?.dateOfBirth ?? "");
   const [error, setError] = useState("");
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -33,13 +35,15 @@ export default function AddPetForm() {
       setError("Please add a photo.");
       return;
     }
+    const details = { photo, name: name.trim(), breed: breed.trim(), dateOfBirth };
     try {
-      addPet({ photo, name: name.trim(), breed: breed.trim(), dateOfBirth });
+      if (pet) updatePet({ ...details, id: pet.id });
+      else addPet(details);
     } catch {
       setError("Couldn't save. The browser's storage may be full.");
       return;
     }
-    router.push("/");
+    router.push(pet ? `/pets/${pet.id}` : "/");
   }
 
   return (

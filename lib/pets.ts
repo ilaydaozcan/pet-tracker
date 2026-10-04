@@ -1,6 +1,8 @@
 // Everything about how pets are stored lives in this one file,
 // so the rest of the app never touches storage directly.
 
+import { clearCustomDueDatesForPet } from "./due-dates";
+import { deleteRecordsForPet } from "./records";
 import { readList, useStoredList, writeList } from "./storage";
 
 export type Pet = {
@@ -21,6 +23,17 @@ export function addPet(pet: Omit<Pet, "id">): Pet {
   const newPet: Pet = { ...pet, id: crypto.randomUUID() };
   writeList(STORAGE_KEY, [...getPets(), newPet]);
   return newPet;
+}
+
+export function updatePet(pet: Pet) {
+  writeList(STORAGE_KEY, getPets().map((p) => (p.id === pet.id ? pet : p)));
+}
+
+// Removes the pet and everything saved about them.
+export function deletePet(petId: string) {
+  writeList(STORAGE_KEY, getPets().filter((p) => p.id !== petId));
+  deleteRecordsForPet(petId);
+  clearCustomDueDatesForPet(petId);
 }
 
 // localStorage only holds about 5MB in total, and a phone photo can be

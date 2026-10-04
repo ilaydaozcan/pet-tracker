@@ -92,7 +92,9 @@ function PetCard({ pet, upcoming }: { pet: Pet; upcoming: DueDate[] }) {
         <Link href={`/pets/${pet.id}`} className="underline">
           View records
         </Link>
-        {/* Later feature: edit profile link */}
+        <Link href={`/pets/${pet.id}/edit`} className="underline">
+          Edit
+        </Link>
       </div>
     </li>
   );

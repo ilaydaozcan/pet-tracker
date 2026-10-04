@@ -52,7 +52,15 @@ export default function PetRecords({ petId }: { petId: string }) {
   return (
     <>
       <Link href="/" className="text-foreground/70 underline">← My cats</Link>
-      <h1 className="mt-4 mb-6 text-2xl font-semibold">{pet.name}&apos;s records</h1>
+      <div className="mt-4 mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">{pet.name}&apos;s records</h1>
+        <Link
+          href={`/pets/${pet.id}/edit`}
+          className="rounded-md bg-foreground px-4 py-2 font-medium text-background"
+        >
+          Edit
+        </Link>
+      </div>
 
       <RecordForm petId={petId} />
 

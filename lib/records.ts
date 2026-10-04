@@ -24,6 +24,10 @@ export function addRecord(record: Omit<CareRecord, "id">): CareRecord {
   return newRecord;
 }
 
+export function deleteRecordsForPet(petId: string) {
+  writeList(STORAGE_KEY, readList<CareRecord>(STORAGE_KEY).filter((r) => r.petId !== petId));
+}
+
 export function useRecords(): CareRecord[] | null {
   return useStoredList<CareRecord>(STORAGE_KEY);
 }
