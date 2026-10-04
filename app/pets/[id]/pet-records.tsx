@@ -3,6 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CARE_ITEMS } from "@/lib/care-rules";
+import {
+  clearCustomDueDate,
+  getDueDates,
+  setCustomDueDate,
+  useCustomDueDates,
+  type DueDate,
+} from "@/lib/due-dates";
 import { usePets } from "@/lib/pets";
 import {
   addRecord,
@@ -11,6 +18,7 @@ import {
   type CareRecord,
   type RecordType,
 } from "@/lib/records";
+import DueDateText from "@/app/due-date-text";
 
 const inputClass =
   "w-full rounded-md border border-foreground/20 bg-transparent px-3 py-2";
@@ -18,9 +26,10 @@ const inputClass =
 export default function PetRecords({ petId }: { petId: string }) {
   const pets = usePets();
   const records = useRecords();
+  const customDueDates = useCustomDueDates();
 
   // Not loaded from the browser yet (see usePets in lib/pets.ts).
-  if (pets === null || records === null) return null;
+  if (pets === null || records === null || customDueDates === null) return null;
 
   const pet = pets.find((p) => p.id === petId);
   if (!pet) {
@@ -38,12 +47,21 @@ export default function PetRecords({ petId }: { petId: string }) {
     .reverse()
     .sort((a, b) => b.date.localeCompare(a.date));
 
+  const dueDates = getDueDates(pet, records, customDueDates);
+
   return (
     <>
       <Link href="/" className="text-foreground/70 underline">← My cats</Link>
       <h1 className="mt-4 mb-6 text-2xl font-semibold">{pet.name}&apos;s records</h1>
 
       <RecordForm petId={petId} />
+
+      <h2 className="mt-10 mb-4 text-lg font-semibold">Upcoming care</h2>
+      <ul className="flex flex-col gap-3">
+        {dueDates.map((due) => (
+          <UpcomingItem key={due.item} petId={petId} due={due} />
+        ))}
+      </ul>
 
       <h2 className="mt-10 mb-4 text-lg font-semibold">Logged</h2>
       {petRecords.length === 0 ? (
@@ -146,6 +164,46 @@ function RecordItem({ record }: { record: CareRecord }) {
       </div>
       {record.notes && (
         <p className="mt-2 whitespace-pre-wrap text-foreground/80">{record.notes}</p>
+      )}
+    </li>
+  );
+}
+
+function UpcomingItem({ petId, due }: { petId: string; due: DueDate }) {
+  return (
+    <li className="rounded-lg border border-foreground/15 p-4">
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="font-medium">{due.item}</span>
+        {due.date ? (
+          <DueDateText date={due.date} />
+        ) : (
+          <span className="text-foreground/70">Nothing due</span>
+        )}
+      </div>
+      {due.date && (
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-foreground/70">
+            {due.isCustom ? "Set by you" : "Suggested"}
+          </span>
+          <input
+            type="date"
+            aria-label={`Change ${due.item} due date`}
+            value={due.date}
+            onChange={(e) => {
+              // Empty while the user is part-way through typing a date.
+              if (e.target.value) setCustomDueDate(petId, due.item, e.target.value);
+            }}
+          />
+          {due.isCustom && (
+            <button
+              type="button"
+              onClick={() => clearCustomDueDate(petId, due.item)}
+              className="underline"
+            >
+              Reset
+            </button>
+          )}
+        </div>
       )}
     </li>
   );

@@ -2,17 +2,27 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import {
+  getDueDates,
+  soonestDueDate,
+  useCustomDueDates,
+  type DueDate,
+} from "@/lib/due-dates";
 import { formatAge, usePets, type Pet } from "@/lib/pets";
+import { useRecords } from "@/lib/records";
+import DueDateText from "./due-date-text";
 
 const buttonClass =
   "rounded-md bg-foreground px-4 py-2 font-medium text-background";
 
 export default function PetList() {
   const pets = usePets();
+  const records = useRecords();
+  const customDueDates = useCustomDueDates();
 
   // null = still on the server / before the browser has read localStorage.
   // Rendering nothing here avoids flashing "no cats" before the real list.
-  if (pets === null) return null;
+  if (pets === null || records === null || customDueDates === null) return null;
 
   if (pets.length === 0) {
     return (
@@ -36,14 +46,18 @@ export default function PetList() {
       </div>
       <ul className="grid gap-4 sm:grid-cols-2">
         {pets.map((pet) => (
-          <PetCard key={pet.id} pet={pet} />
+          <PetCard
+            key={pet.id}
+            pet={pet}
+            nextDue={soonestDueDate(getDueDates(pet, records, customDueDates))}
+          />
         ))}
       </ul>
     </>
   );
 }
 
-function PetCard({ pet }: { pet: Pet }) {
+function PetCard({ pet, nextDue }: { pet: Pet; nextDue?: DueDate }) {
   return (
     <li className="flex flex-col gap-4 rounded-lg border border-foreground/15 p-4">
       <div className="flex items-center gap-4">
@@ -62,7 +76,13 @@ function PetCard({ pet }: { pet: Pet }) {
         </div>
       </div>
 
-      {/* Later feature: what's due next */}
+      {nextDue ? (
+        <p>
+          Next: {nextDue.item} · <DueDateText date={nextDue.date!} />
+        </p>
+      ) : (
+        <p className="text-foreground/70">Nothing due</p>
+      )}
 
       <div className="flex gap-4">
         <Link href={`/pets/${pet.id}`} className="underline">

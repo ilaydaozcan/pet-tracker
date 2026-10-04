@@ -1,6 +1,7 @@
 // Everything about how care records are stored lives in this one file.
 
 import type { CareItem } from "./care-rules";
+import { clearCustomDueDate } from "./due-dates";
 import { readList, useStoredList, writeList } from "./storage";
 
 export type RecordType = CareItem | "Other";
@@ -18,6 +19,8 @@ const STORAGE_KEY = "records";
 export function addRecord(record: Omit<CareRecord, "id">): CareRecord {
   const newRecord: CareRecord = { ...record, id: crypto.randomUUID() };
   writeList(STORAGE_KEY, [...readList<CareRecord>(STORAGE_KEY), newRecord]);
+  // Logging a dose means any hand-set due date for it no longer applies.
+  if (record.type !== "Other") clearCustomDueDate(record.petId, record.type);
   return newRecord;
 }
 
