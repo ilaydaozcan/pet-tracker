@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { addPet, resizePhoto } from "@/lib/pets";
 
 const inputClass =
   "w-full rounded-md border border-foreground/20 bg-transparent px-3 py-2";
 
 export default function AddPetForm() {
+  const router = useRouter();
   const [photo, setPhoto] = useState("");
   const [name, setName] = useState("");
   const [breed, setBreed] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [error, setError] = useState("");
-  const [savedName, setSavedName] = useState("");
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -38,27 +39,7 @@ export default function AddPetForm() {
       setError("Couldn't save. The browser's storage may be full.");
       return;
     }
-    setSavedName(name.trim());
-    setPhoto("");
-    setName("");
-    setBreed("");
-    setDateOfBirth("");
-    setError("");
-  }
-
-  if (savedName) {
-    return (
-      <div role="status" className="rounded-md border border-green-600/40 bg-green-600/10 p-4">
-        <p className="font-medium">{savedName} has been added!</p>
-        <button
-          type="button"
-          onClick={() => setSavedName("")}
-          className="mt-3 underline"
-        >
-          Add another cat
-        </button>
-      </div>
-    );
+    router.push("/");
   }
 
   return (

@@ -1,5 +1,7 @@
 // Everything about how pets are stored lives in this one file,
-// so the rest of the app never touches localStorage directly.
+// so the rest of the app never touches storage directly.
+
+import { readList, useStoredList, writeList } from "./storage";
 
 export type Pet = {
   id: string;
@@ -12,13 +14,12 @@ export type Pet = {
 const STORAGE_KEY = "pets";
 
 export function getPets(): Pet[] {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  return saved ? JSON.parse(saved) : [];
+  return readList<Pet>(STORAGE_KEY);
 }
 
 export function addPet(pet: Omit<Pet, "id">): Pet {
   const newPet: Pet = { ...pet, id: crypto.randomUUID() };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...getPets(), newPet]));
+  writeList(STORAGE_KEY, [...getPets(), newPet]);
   return newPet;
 }
 
@@ -43,4 +44,39 @@ export function resizePhoto(file: File, maxSize = 400): Promise<string> {
     };
     img.src = url;
   });
+}
+
+export function usePets(): Pet[] | null {
+  return useStoredList<Pet>(STORAGE_KEY);
+}
+
+// --- Age ---
+
+// "2024-05-10" -> "1 year, 4 months". Kittens change fast, so young
+// cats are shown in weeks, then months, then years.
+export function formatAge(dateOfBirth: string, today = new Date()): string {
+  const [year, month, day] = dateOfBirth.split("-").map(Number);
+  const birth = new Date(year, month - 1, day);
+
+  const days = Math.floor((today.getTime() - birth.getTime()) / 86_400_000);
+  if (days < 0) return "Not born yet";
+
+  let months = (today.getFullYear() - year) * 12 + (today.getMonth() - (month - 1));
+  if (today.getDate() < day) months--;
+
+  if (months < 2) {
+    const weeks = Math.floor(days / 7);
+    return weeks < 1 ? plural(days, "day") : plural(weeks, "week");
+  }
+  if (months < 12) return plural(months, "month");
+
+  const years = Math.floor(months / 12);
+  const extraMonths = months % 12;
+  return extraMonths
+    ? `${plural(years, "year")}, ${plural(extraMonths, "month")}`
+    : plural(years, "year");
+}
+
+function plural(n: number, word: string) {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
