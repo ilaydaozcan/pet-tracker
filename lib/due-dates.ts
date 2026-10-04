@@ -125,8 +125,10 @@ export function getDueDates(
   });
 }
 
-export function soonestDueDate(dueDates: DueDate[]): DueDate | undefined {
+// The `count` soonest items that have a due date (fewer if fewer are due).
+export function soonestDueDates(dueDates: DueDate[], count: number): DueDate[] {
   return dueDates
     .filter((d) => d.date !== null)
-    .sort((a, b) => a.date!.localeCompare(b.date!))[0];
+    .sort((a, b) => a.date!.localeCompare(b.date!))
+    .slice(0, count);
 }

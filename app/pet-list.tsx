@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   getDueDates,
-  soonestDueDate,
+  soonestDueDates,
   useCustomDueDates,
   type DueDate,
 } from "@/lib/due-dates";
@@ -49,7 +49,7 @@ export default function PetList() {
           <PetCard
             key={pet.id}
             pet={pet}
-            nextDue={soonestDueDate(getDueDates(pet, records, customDueDates))}
+            upcoming={soonestDueDates(getDueDates(pet, records, customDueDates), 3)}
           />
         ))}
       </ul>
@@ -57,7 +57,7 @@ export default function PetList() {
   );
 }
 
-function PetCard({ pet, nextDue }: { pet: Pet; nextDue?: DueDate }) {
+function PetCard({ pet, upcoming }: { pet: Pet; upcoming: DueDate[] }) {
   return (
     <li className="flex flex-col gap-4 rounded-lg border border-foreground/15 p-4">
       <div className="flex items-center gap-4">
@@ -76,10 +76,14 @@ function PetCard({ pet, nextDue }: { pet: Pet; nextDue?: DueDate }) {
         </div>
       </div>
 
-      {nextDue ? (
-        <p>
-          Next: {nextDue.item} · <DueDateText date={nextDue.date!} />
-        </p>
+      {upcoming.length > 0 ? (
+        <ul>
+          {upcoming.map((due) => (
+            <li key={due.item}>
+              {due.item} · <DueDateText date={due.date!} />
+            </li>
+          ))}
+        </ul>
       ) : (
         <p className="text-foreground/70">Nothing due</p>
       )}
